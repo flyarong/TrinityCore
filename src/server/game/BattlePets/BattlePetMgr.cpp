@@ -237,9 +237,9 @@ void BattlePetMgr::LoadFromDB(PreparedQueryResult pets, PreparedQueryResult slot
     }
 }
 
-void BattlePetMgr::SaveToDB(SQLTransaction& trans)
+void BattlePetMgr::SaveToDB(LoginDatabaseTransaction& trans)
 {
-    PreparedStatement* stmt = nullptr;
+    LoginDatabasePreparedStatement* stmt = nullptr;
 
     for (auto itr = _pets.begin(); itr != _pets.end();)
     {
@@ -444,7 +444,7 @@ void BattlePetMgr::SummonPet(ObjectGuid guid)
         return;
 
     // TODO: set proper CreatureID for spell DEFAULT_SUMMON_BATTLE_PET_SPELL (default EffectMiscValueA is 40721 - Murkimus the Gladiator)
-    _owner->GetPlayer()->SetGuidValue(ACTIVE_PLAYER_FIELD_SUMMONED_BATTLE_PET_ID, guid);
+    _owner->GetPlayer()->SetSummonedBattlePetGUID(guid);
     _owner->GetPlayer()->CastSpell(_owner->GetPlayer(), speciesEntry->SummonSpellID ? speciesEntry->SummonSpellID : uint32(DEFAULT_SUMMON_BATTLE_PET_SPELL));
 
     // TODO: set pet level, quality... update fields
@@ -454,10 +454,10 @@ void BattlePetMgr::DismissPet()
 {
     Player* ownerPlayer = _owner->GetPlayer();
     Creature* pet = ObjectAccessor::GetCreatureOrPetOrVehicle(*ownerPlayer, ownerPlayer->GetCritterGUID());
-    if (pet && ownerPlayer->GetGuidValue(ACTIVE_PLAYER_FIELD_SUMMONED_BATTLE_PET_ID) == pet->GetGuidValue(UNIT_FIELD_BATTLE_PET_COMPANION_GUID))
+    if (pet && *ownerPlayer->m_activePlayerData->SummonedBattlePetGUID == pet->GetBattlePetCompanionGUID())
     {
         pet->DespawnOrUnsummon();
-        ownerPlayer->SetGuidValue(ACTIVE_PLAYER_FIELD_SUMMONED_BATTLE_PET_ID, ObjectGuid::Empty);
+        ownerPlayer->SetSummonedBattlePetGUID(ObjectGuid::Empty);
     }
 }
 
